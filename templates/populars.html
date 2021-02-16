@@ -1,0 +1,87 @@
+ {% extends "layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+{% block main %}
+<head>
+    <script>
+        // TODO: Add code to check answers to questions
+        function star(legoset) {
+            var xhttp;
+            xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "/highlight", true);
+            xhttp.send(JSON.stringify({
+                legoset: legoset
+            }));
+        }
+        function unfavorite(legoset) {
+            var xhttp;
+            xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "/unhighlight", true);
+            xhttp.send(JSON.stringify({
+                legoset: legoset
+            }));
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            let favorite = document.getElementsByTagName('tr');
+            console.log(favorite);
+            for (let i = 1; i < favorite.length; i++) {
+                console.log(favorite[i].getElementsByClassName("favorite"));
+                let starNode = favorite[i].getElementsByClassName("favorite")[0];
+                console.log(favorite[i]);
+                let highlightNode = starNode.parentNode;
+                let nameNode = favorite[i].getElementsByClassName("name")[0];
+                console.log(highlightNode.classList.contains("highlight"));
+                starNode.addEventListener('click', function() {
+                    if (highlightNode.classList.contains("highlight")) {
+                        highlightNode.classList.remove("highlight");
+                        console.log("unhighlight");
+                        console.log(i);
+                        console.log(nameNode.innerHTML);
+                        unfavorite(nameNode.innerHTML);
+                    }
+                    else {
+                        highlightNode.classList.add("highlight");
+                        console.log("highlight");
+                        console.log(i);
+                        console.log(nameNode.innerHTML);
+                        star(nameNode.innerHTML);
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<h1>Here are the 25 most popular legosets from our users!</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Pieces</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for favorite in favorites %}
+        <tr>
+            <td class="highlight">
+                <div class="favorite">&#9733;</div>
+            </td>
+            <td><a href="{{favorite['url']}}" target="_blank" class="name">{{ favorite['name'] }}</a></td>
+            <td id="price">{{ favorite['price'] }}</td>
+            <td id="pieces">{{ favorite['pieces'] }}</td>
+        </tr>
+        {% endfor %}
+        {% for popular in populars %}
+        <tr>
+            <td>
+                <div class="favorite">&#9733;</div>
+            </td>
+            <td><a href="{{popular['url']}}" target="_blank" class="name">{{ popular['name'] }}</a></td>
+            <td id="price">{{ popular['price'] }}</td>
+            <td id="pieces">{{ popular['pieces'] }}</td>
+        </tr>
+        {% endfor %}
+{% endblock %}

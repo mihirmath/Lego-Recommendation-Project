@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+
+{% block main %}
+<tbody>
+    <form action="/" method="post">
+        <form name="theme" id="theme" action="/">
+            Theme: <select name="theme" id="theme">
+            <option disabled selected value="">Pick a theme</option>
+            {% for theme in themes %}
+            <option value="{{theme['theme']}}">{{theme['theme']}}</option>
+            {% endfor %}
+          </select>
+        <p></p>
+        <div class="form-group">
+            Budget: $<input autocomplete="off" autofocus class="form-control" name="budget" placeholder="Budget" type="numeric" min=0 max=790 pattern="[0-9]+">
+        </div>
+        <p></p>
+        <div class="form-group">
+            Pieces: Min:<input autocomplete="off" autofocus class="form-control" name="pieces_min" placeholder="Min Pieces" type="number" min=0 pattern="[0-9]+"> Max:<input autocomplete="off" autofocus class="form-control" name="pieces_max" placeholder="Max Pieces" type="number" max=5922 pattern="[0-9]+">
+        </div>
+        <p></p>
+        <input type="submit" value="Get Recommendations">
+        </form>
+     </form>
+</tbody>
+{% endblock %}

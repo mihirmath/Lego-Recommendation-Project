@@ -1,0 +1,74 @@
+ {% extends "layout.html" %}
+
+{% block title %}
+    Homepage
+{% endblock %}
+{% block main %}
+<head>
+    <script>
+        // TODO: Add code to check answers to questions
+        function star(legoset) {
+            console.log("entered star function");
+            var xhttp;
+            xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "/highlight", true);
+            xhttp.send(JSON.stringify({
+                legoset: legoset
+            }));
+        }
+        function unfavorite(legoset) {
+            console.log("entered unfavorite function");
+            var xhttp;
+            xhttp = new XMLHttpRequest();
+            xhttp.open("POST", "/unhighlight", true);
+            xhttp.send(JSON.stringify({
+                legoset: legoset
+            }));
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            let favorite = document.querySelectorAll('.favorite');
+            for (let i = 0; i < favorite.length; i++) {
+                favorite[i].classList.add("highlight");
+                favorite[i].addEventListener('click', function() {
+                    if (favorite[i].classList.contains("highlight")) {
+                        console.log(favorite[i].classList.contains("highlight"));
+                        this.classList.remove("highlight");
+                        console.log("unhighlight");
+                        console.log(i);
+                        console.log(document.getElementsByClassName("name")[i].innerHTML);
+                        unfavorite(document.getElementsByClassName("name")[i].innerHTML);
+                    }
+                    else {
+                        this.classList.add("highlight");
+                        console.log("highlight");
+                        console.log(i);
+                        console.log(document.getElementsByClassName("name")[i].innerHTML);
+                        star(document.getElementsByClassName("name")[i].innerHTML);
+                    }
+                });
+            }
+        });
+    </script>
+</head>
+<h1>Recommendations!</h1>
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th></th>
+            <th>Name</th>
+            <th>Price</th>
+            <th>Pieces</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for favorite in favorites %}
+        <tr>
+            <td>
+                <div class="favorite">&#9733;</div>
+            </td>
+            <td><a href="{{favorite['url']}}" target="_blank" class="name" class="favorite">{{ favorite['name'] }}</a></td>
+            <td id="price">${{ favorite['price'] }}</td>
+            <td id="pieces">{{ favorite['pieces'] }}</td>
+        </tr>
+        {% endfor %}
+{% endblock %}
