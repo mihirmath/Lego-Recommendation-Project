@@ -18,7 +18,6 @@ def apology(message, code=400):
     def escape(s):
         """
         Escape special characters.
-
         https://github.com/jacebrowning/memegen#special-characters
         """
         for old, new in [("-", "--"), (" ", "-"), ("_", "__"), ("?", "~q"),
@@ -64,20 +63,23 @@ if not os.environ.get("API_KEY"):
     raise RuntimeError("API_KEY not set")
 # Add database
 db = SQL("sqlite:///legosets.db")
-@app.route("/favorites")
-def favorites():
+def get_favorites():
     favs = []
     favorites = db.execute("""SELECT DISTINCT name, price, pieces, image_url FROM legosets
                    WHERE id IN (SELECT legoset_id FROM favorites WHERE user_id=?)
                    ORDER BY price;""", session['id'])
     for favorite in favorites:
-            favs.append({
-                "name": favorite['name'],
-                "price": usd(favorite['price']),
-                "pieces": favorite['pieces'],
-                "url": favorite['image_url']
-            })
-    return render_template("favorites.html", favorites=favorites)
+        favs.append({
+            "name": favorite['name'],
+            "price": usd(favorite['price']),
+            "pieces": favorite['pieces'],
+            "url": favorite['image_url']
+        })
+    return favs
+@app.route("/favorites")
+def favorites():
+    favs = get_favorites()
+    return render_template("favorites.html", favorites=favs)
 @app.route("/highlight", methods=["POST"])
 def highlight():
     legoId = db.execute("SELECT id FROM legosets WHERE name = ?", request.get_json(force = True)['legoset'])
@@ -88,43 +90,38 @@ def unhighlight():
     legoId = db.execute("SELECT id FROM legosets WHERE name = ?", request.get_json(force = True)['legoset'])
     favoritesId = db.execute("DELETE FROM favorites WHERE (user_id, legoset_id) = (?, ?)", session['id'], legoId[0]['id'])
     return 'OK'
-@app.route("/populars")
-def populars():
+def get_populars(favs):
     populars = []
-    favorites = []
     pops = db.execute("""SELECT name, price, pieces, image_url
                         FROM favorites
                         JOIN legosets ON favorites.legoset_id=legosets.id
                         GROUP BY legoset_id
                         ORDER BY COUNT(legoset_id) DESC LIMIT 25""")
-
     for pop in pops:
         populars.append({
             "name": pop['name'],
             "price": usd(pop['price']),
             "pieces": pop['pieces'],
             "url": pop['image_url']
-            })
-    favs = db.execute("""SELECT DISTINCT(name), price, pieces, image_url FROM legosets WHERE id IN
-                        (SELECT DISTINCT legoset_id
-                        FROM favorites
-                        JOIN legosets ON legoset_id=legosets.id WHERE user_id = ?)""", session['id'])
-    for fav in favs:
-        favorites.append({
-            "name": fav['name'],
-            "price": usd(fav['price']),
-            "pieces": fav['pieces'],
-            "url": fav['image_url']
         })
-        print(favorites)
+    for fav in favs:
         if fav in pops:
             populars.remove({
                 "name": fav['name'],
                 "price": usd(fav['price']),
                 "pieces": fav['pieces'],
                 "url": fav['image_url']
-                })
-    return render_template("populars.html", populars=populars, favorites=favorites)
+            })
+    return populars
+@app.route("/populars")
+def populars():
+    favs = db.execute("""SELECT DISTINCT(name), price, pieces, image_url FROM legosets WHERE id IN
+                        (SELECT DISTINCT legoset_id
+                        FROM favorites
+                        JOIN legosets ON legoset_id=legosets.id WHERE user_id = ?)""", session['id'])
+    favorites = get_favorites()
+    pops = get_populars(favorites)
+    return render_template("populars.html", populars=pops, favorites=favorites)
 @app.route("/", methods=["GET", "POST"])
 @login_required
 def index():
